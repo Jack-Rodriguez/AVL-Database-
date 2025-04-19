@@ -13,6 +13,7 @@ int AVLTree::height(AVLNode* node) {
     return node ? node->height : 0;
 }
 
+
 void AVLTree::updateHeight(AVLNode* node) {
     if (node) {
         node->height = 1 + std::max(height(node->left), height(node->right));
@@ -26,15 +27,40 @@ int AVLTree::getBalance(AVLNode* node) {
 /*
 Can be used to balance AVL trees
 */
-AVLNode* AVLTree::rotateRight(AVLNode* y) {
-// to do..
+AVLNode* AVLTree::rotateRight(AVLNode* y) 
+{
+    if(y == nullptr || y->left == nullptr)
+    {
+        return y;
+    }
+
+    AVLNode* l = y->left;
+    y->left = l->right;
+    l->right = y;
+    updateHeight(y);
+    updateHeight(l);
+    return l;
+    
 }
 
 /*
 Can be used to balance AVL trees
 */
-AVLNode* AVLTree::rotateLeft(AVLNode* x) {
-// to do..
+AVLNode* AVLTree::rotateLeft(AVLNode* x) 
+{
+    if(x == nullptr || x->right == nullptr)
+    {
+        return x;
+    }
+
+    AVLNode* r = x->right;
+    x->right = r->left;
+    r->left = x;
+    updateHeight(x);
+    updateHeight(r);
+    return r;
+
+    
 }
 
 
@@ -53,6 +79,8 @@ void AVLTree::deleteNode(const std::string& key, int value) {
 
 Record* AVLTree::search(const std::string& key, int value) {
     // to do..
+
+    return nullptr;
 }
 
 // IndexedDatabase Implementation
@@ -81,6 +109,8 @@ void IndexedDatabase::deleteRecord(const std::string& key, int value) {
 
 std::vector<Record*> IndexedDatabase::rangeQuery(int start, int end) {
     //to do..
+
+    return {};
 }
 
 
