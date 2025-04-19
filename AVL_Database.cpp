@@ -141,12 +141,52 @@ void AVLTree::deleteNode(const std::string& key, int value) {
 }
 
 
+//searches for a record in the tree.
+Record* AVLTree::search(const std::string& key, int value) 
+{
+    //we create a node that will represent our target We create it by searching using the
+    //helper
+    AVLNode* foundNode = searchHelper(root, key, value);
 
-Record* AVLTree::search(const std::string& key, int value) {
-    // to do..
+    //if the returned node is null, we return null.
+    if (foundNode == nullptr) 
+    {
+        return nullptr;
+    }
 
-    return nullptr;
+    //if not, we return the record.
+    return foundNode->record;
 }
+
+//helper function for search.
+AVLNode* AVLTree::searchHelper(AVLNode* node, const std::string& key, int value) const
+{
+    //if the node is null, we return null.
+    if(node == nullptr)
+    {
+        return nullptr;
+    }
+
+    //if the node is the target, we return the node.
+    else if(node->record->key == key && node->record->value == value)
+    {
+        return node;
+    }
+
+    //this traversal is much better than simply checking every node. Now we can travel
+    //towards the value rather than sweep the entire tree for it.
+    //if value is less, we go left. If its more we go right. Easy peasy.
+    if(value < node->record->value)
+    {
+        return searchHelper(node->left, key, value);
+    }
+    else
+    {
+        return searchHelper(node->right, key, value);
+    }
+}
+
+
 
 // IndexedDatabase Implementation
 void IndexedDatabase::insert(Record* record) {
