@@ -14,13 +14,15 @@ int AVLTree::height(AVLNode* node) {
 }
 
 
-void AVLTree::updateHeight(AVLNode* node) {
+void AVLTree::updateHeight(AVLNode* node) 
+{
     if (node) {
         node->height = 1 + std::max(height(node->left), height(node->right));
     }
 }
 
-int AVLTree::getBalance(AVLNode* node) {
+int AVLTree::getBalance(AVLNode* node) 
+{
     return node ? height(node->left) - height(node->right) : 0;
 }
 
@@ -64,8 +66,71 @@ AVLNode* AVLTree::rotateLeft(AVLNode* x)
 }
 
 
-void AVLTree::insert(Record* record) {
-    // to do..
+void AVLTree::insert(Record* record) 
+{
+    root = insertHelper(root, record);
+}
+
+AVLNode* AVLTree::insertHelper(AVLNode* node, Record* record)
+{
+    //checks if the node is null. If so, we can insert right away.
+    if(node == nullptr)
+    {
+        return new AVLNode(record);
+    }
+
+    //now we move through the tree based on the record value. This is done recursively.
+    //if the record value is less than current, then we move left. We more right if its more.
+    if(record->value < node->record->value)
+    {
+        node->left = insertHelper(node->left, record);
+    }
+    else
+    {
+        node->right = insertHelper(node->right, record);
+    }
+
+    //updates the height of the current node (this is also done in rotations, but we need it here)
+    updateHeight(node);
+    //we need a balance of the current node.
+    int balance = getBalance(node);
+
+
+    //now we check for imbalances. If it is more than one, we have a left imbalance. If its less 
+    //than one its right imbalance. Further more (left as an example) if we are left imbalanced, and 
+    //the record value is less than the left node, that means the new insert was left of the 
+    //current, and left of the current->left. Now we know the imbalance is LL. If that isnt the 
+    //case, then it is LR.
+    if(balance > 1)
+    {
+        if(record->value < node->left->record->value)
+        {
+            //rotate the current node right and return.
+            return rotateRight(node);
+        }
+        else
+        {
+            //rotate the current->left, the return the node rotated right.
+            node->left = rotateLeft(node->left);
+            return rotateRight(node);
+        }
+    }
+        //this all works the same as above.
+    else if(balance < -1)
+    {
+        if(record->value > node->right->record->value)
+        {
+            return rotateLeft(node);
+        }
+        else
+        {
+            node->right = rotateRight(node->right);
+            return rotateLeft(node);
+        }
+    }
+
+    //returns the node. This happens if the node wasnt NUll and we didnt need to rotate.
+    return node;
 }
 
 
