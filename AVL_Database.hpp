@@ -9,7 +9,7 @@ class Record {
 public:
     std::string key;
     int value;
-
+    
     Record(const std::string& k, int v);
 };
 
@@ -19,7 +19,7 @@ public:
     AVLNode* left;
     AVLNode* right;
     int height;
-
+    
     AVLNode(Record* r);
 };
 
@@ -28,19 +28,19 @@ private:
     AVLNode* root;
     int nodeCount;
     mutable int searchComparisonCount;  // For measuring search complexity
-
+    
     int height(AVLNode* node);
     int getBalance(AVLNode* node);
     void updateHeight(AVLNode* node);
-
+    
     AVLNode* rotateRight(AVLNode* y);
     AVLNode* rotateLeft(AVLNode* x);
-
+    
     AVLNode* insertHelper(AVLNode* node, Record* record);
     AVLNode* deleteHelper(AVLNode* node, const std::string& key, int value);
     AVLNode* searchHelper(AVLNode* node, const std::string& key, int value) const;
     AVLNode* minValueNode(AVLNode* node);
-
+    
     friend class IndexedDatabase;
 
 public:
@@ -55,7 +55,7 @@ public:
 class IndexedDatabase {
 private:
     AVLTree index;
-
+    
     void inorderHelper(AVLNode* node, std::vector<Record*>& result) const;
     void rangeQueryHelper(AVLNode* node, int start, int end, std::vector<Record*>& result) const;
     void clearHelper(AVLNode* node);
@@ -70,7 +70,7 @@ public:
     std::vector<Record*> inorderTraversal();
     void clearDatabase();
     int countRecords() { return index.getNodeCount(); }
-
+    
     // New methods for testing
     int getSearchComparisons(const std::string& key, int value);
     int getTreeHeight() const;
