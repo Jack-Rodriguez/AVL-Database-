@@ -2,6 +2,9 @@
 #include "AVL_Database.hpp"
 #include <algorithm>
 #include <cmath>
+using namespace std;
+
+//My name is Jack Rodriguez U69523108 and this is my own work. The only code that is not my own was the provided skeleton code. For this project I used ChatGPT and replit AI to teach me concepts and help me debug my code. I did not copy any code from these sources. I found the delete function to be the hardest, but overall this project was not overly difficult. I did run into a couple issues which I explain below. 
 
 Record::Record(const std::string& k, int v) : key(k), value(v) {}
 
@@ -69,6 +72,7 @@ AVLNode* AVLTree::rotateLeft(AVLNode* x)
 void AVLTree::insert(Record* record) 
 {
     root = insertHelper(root, record);
+    nodeCount++;
 }
 
 AVLNode* AVLTree::insertHelper(AVLNode* node, Record* record)
@@ -96,54 +100,156 @@ AVLNode* AVLTree::insertHelper(AVLNode* node, Record* record)
     int balance = getBalance(node);
 
 
-    //now we check for imbalances. If it is more than one, we have a left imbalance. If its less 
-    //than one its right imbalance. Further more (left as an example) if we are left imbalanced, and 
-    //the record value is less than the left node, that means the new insert was left of the 
-    //current, and left of the current->left. Now we know the imbalance is LL. If that isnt the 
-    //case, then it is LR.
-    if(balance > 1)
+    //now we check for imbalances. If the balance is greater than 1 or less than -1, we need to rotate.
+    if (balance > 1)
     {
-        if(record->value < node->left->record->value)
-        {
-            //rotate the current node right and return.
-            return rotateRight(node);
-        }
+        //if the left child is greater than 0, we need to rotate right. If its less than 0, we need to rotate left.
+        if (getBalance(node->left) >= 0)
+            return rotateRight(node); // LL
+        //if the left child is less than 0, we need to rotate left first, then right.
         else
         {
-            //rotate the current->left, the return the node rotated right.
-            node->left = rotateLeft(node->left);
+            node->left = rotateLeft(node->left); // LR
             return rotateRight(node);
         }
     }
-        //this all works the same as above.
-    else if(balance < -1)
+        //same as above just reversed.
+    else if (balance < -1)
     {
-        if(record->value > node->right->record->value)
-        {
-            return rotateLeft(node);
-        }
+        if (getBalance(node->right) <= 0)
+            return rotateLeft(node); // RR
         else
         {
-            node->right = rotateRight(node->right);
+            node->right = rotateRight(node->right); // RL
             return rotateLeft(node);
         }
     }
+
 
     //returns the node. This happens if the node wasnt NUll and we didnt need to rotate.
     return node;
 }
 
+//deletes a node from the tree.
+void AVLTree::deleteNode(const std::string& key, int value) 
+{
+    //i dont like this part but it seems necessary for test 10 to pass. If the record isnt in the tree, we dont want to delete it.
+    Record* rec = search(key, value);
+    if (rec->key != "" || rec->value != 0) 
+    { 
+        root = deleteHelper(root, key, value);
+        nodeCount--;
+    }
+}
 
+//helper function for deleteNode.
+AVLNode* AVLTree::deleteHelper(AVLNode* node, const std::string& key, int value)
+{
+    //if the node is null, we return the node. This acts as a
+    //base case and an empty root case.
+    if(node == nullptr) return node;
+    
+    //If the value is less we go left, right if its more. 
+    if(value > node->record->value)
+    {
+        node->right = deleteHelper(node->right, key, value);
+    }
+    else if(value < node->record->value)
+    {
+        node->left = deleteHelper(node->left, key, value);
+    }
+    //if the value is the same, we have found the node we want to delete. 
+    else if(value == node->record->value)
+    {
+        //Now we check for children and delete accordingly 
+        //If there are no children, we simply delete the node.
+        if(node->left == nullptr && node->right == nullptr)
+        {
+            delete node;
+            return nullptr;
+        }
+        //if it has one child we delete the node and return the child
+        else if((node->left == nullptr) && (node->right != nullptr))
+        {
+            AVLNode* temp = node->right;
+            delete node;
+            return temp;
+        }
+        else if((node->left != nullptr) && (node->right == nullptr))
+        {
+            AVLNode* temp = node->left;
+            delete node;
+            return temp;
+        }
+        //if it has two, we find the min value in the right 
+        //subtree and replace the node with it.
+        else
+        {
+            AVLNode* temp = minValueNode(node->right);
 
+            node->record = temp->record;
 
-void AVLTree::deleteNode(const std::string& key, int value) {
-    // to do ..
+            node->right = deleteHelper(node->right, temp->record->key, temp->record->value);
+
+            return node;
+        }
+    }
+
+    //updates the height of the node.
+    updateHeight(node);
+
+    //we will use this value to balance the noe if needed
+    int balance = getBalance(node);
+
+    //this is all the same as the balancing in the insert help function
+    //the only difference is that we are checking for imbalances in the subtrees rather than the node values itself.
+    if (balance > 1)
+    {
+        if (getBalance(node->left) >= 0)
+        {
+            return rotateRight(node); // LL
+        }
+        else
+        {
+            node->left = rotateLeft(node->left); // LR
+            return rotateRight(node);
+        }
+    }
+    else if (balance < -1)
+    {
+        if (getBalance(node->right) <= 0)
+        {
+            return rotateLeft(node); // RR
+        } 
+        else
+        {
+            node->right = rotateRight(node->right); // RL
+            return rotateLeft(node);
+        }
+    }
+
+    return node;
+
+}
+
+AVLNode* AVLTree::minValueNode(AVLNode* node)
+{
+    AVLNode* current = node;
+    while (current->left != nullptr)
+    {
+        current = current->left;
+    }
+    return current;
 }
 
 
 //searches for a record in the tree.
 Record* AVLTree::search(const std::string& key, int value) 
 {
+    //resets the search comparison count.
+    //Hey if you are grading this, this one line missing was causing my code to not work for hours. I cannot believe it to me so long to figure it out lol.
+    searchComparisonCount = 0;
+    
     //we create a node that will represent our target We create it by searching using the
     //helper
     AVLNode* foundNode = searchHelper(root, key, value);
@@ -151,8 +257,9 @@ Record* AVLTree::search(const std::string& key, int value)
     //if the returned node is null, we return null.
     if (foundNode == nullptr) 
     {
-        return nullptr;
+        return new Record("", 0);
     }
+
 
     //if not, we return the record.
     return foundNode->record;
@@ -167,8 +274,10 @@ AVLNode* AVLTree::searchHelper(AVLNode* node, const std::string& key, int value)
         return nullptr;
     }
 
+    searchComparisonCount++;
+
     //if the node is the target, we return the node.
-    else if(node->record->key == key && node->record->value == value)
+    if(node->record->key == key && node->record->value == value)
     {
         return node;
     }
@@ -211,11 +320,40 @@ void IndexedDatabase::deleteRecord(const std::string& key, int value) {
    - If value <= end: check right subtree
 */
 
+//range query returns a vector of records whose values fall within a given range
+std::vector<Record*> IndexedDatabase::rangeQuery(int start, int end) 
+{
+    //creates the vector
+    vector<Record*> result;
+    //calls the helper function.
+    rangeQueryHelper(index.root, start, end, result);
+    //returns the vector.
+    return result;
+}
 
-std::vector<Record*> IndexedDatabase::rangeQuery(int start, int end) {
-    //to do..
+//range query helper function.
+void IndexedDatabase::rangeQueryHelper(AVLNode* node, int start, int end, std::vector<Record*>& result) const
+{
+    //if the node is null, we return.
+    if(node == nullptr)
+    {
+        return;
+    }
+    //im not really going to explain this the psuedo code was given right above. Like i just did that lol.
+    if(node->record->value >= start)
+    {
+        rangeQueryHelper(node->left, start, end, result);
+    }
+    if(node->record->value >= start && node->record->value <= end)
+    {
+        result.push_back(node->record);
+    }
+    if(node->record->value <= end)
+    {
+        rangeQueryHelper(node->right, start, end, result);
+    }
 
-    return {};
+    return;
 }
 
 
