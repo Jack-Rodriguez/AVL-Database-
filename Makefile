@@ -1,16 +1,14 @@
+
+CXX = g++
+CXXFLAGS = -Wall -std=c++11
+
 all: main
 
-CXX = clang++
-override CXXFLAGS += -g -Wall -Werror
-
-SRCS = $(shell find . -name '.ccls-cache' -type d -prune -o -type f -name '*.cpp' -print | sed -e 's/ /\\ /g')
-HEADERS = $(shell find . -name '.ccls-cache' -type d -prune -o -type f -name '*.h' -print)
-
-main: $(SRCS) $(HEADERS)
-	$(CXX) $(CXXFLAGS) $(SRCS) -o "$@"
-
-main-debug: $(SRCS) $(HEADERS)
-	NIX_HARDENING_ENABLE= $(CXX) $(CXXFLAGS) -O0  $(SRCS) -o "$@"
+main: db_driver.cpp AVL_Database.cpp
+	$(CXX) $(CXXFLAGS) -o main db_driver.cpp AVL_Database.cpp
 
 clean:
-	rm -f main main-debug
+	rm -f main *.o
+
+debug: CXXFLAGS += -g
+debug: main
